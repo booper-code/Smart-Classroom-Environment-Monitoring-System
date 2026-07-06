@@ -1,0 +1,67 @@
+To configure the physical hardware layer on the breadboard using the provided components, the circuitry must be wired systematically to ensure proper power delivery, reliable sensor reading, SPI storage interface connectivity, and error free serial communication.
+
+The step by step physical assembly layout is detailed below.
+
+---
+
+### 1. Breadboard Power Distribution Setup
+
+Before connecting the logical signal lines, establish a centralized power distribution system along the breadboard side rails to support multiple hardware components safely.
+
+* **Positive Power Rail:** Connect a jumper wire from the **5V** pin on the Arduino Uno to the positive column (marked with a red line or plus sign) on the breadboard.
+* **Ground Reference Rail:** Connect a jumper wire from a **GND** pin on the Arduino Uno to the negative column (marked with a blue or black line or minus sign) on the breadboard.
+* **Common Ground Reference:** Run a jumper wire from the **GND** pin of the WeMos module directly to the same negative ground rail on the breadboard. Establishing a shared electrical ground reference across both programmable boards is mandatory to prevent voltage floating and data corruption during serial communication.
+
+---
+
+### 2. Environmental Sensor Circuitry Assembly
+
+#### A. DHT11 Temperature and Humidity Sensor
+
+The digital sensor monitors atmospheric conditions and outputs data via a single wire digital interface.
+
+* **VCC / Power Pin:** Connect this pin directly to the 5V positive power rail on the breadboard.
+* **GND / Ground Pin:** Connect this pin directly to the negative ground rail on the breadboard.
+* **DATA / Signal Pin:** Connect this pin to **Digital Pin 2** on the Arduino Uno using a jumper wire.
+
+#### B. LDR Light Sensor (Voltage Divider Network)
+
+An LDR changes its internal resistance based on ambient brightness. To convert this varying resistance into a readable voltage metric, a voltage divider circuit must be constructed on the breadboard using one of the 10k ohm static resistors.
+
+* **Step 1:** Insert the LDR into two separate, empty rows on the breadboard.
+* **Step 2:** Connect a jumper wire from one leg of the LDR to the 5V positive power rail.
+* **Step 3:** Insert one leg of a 10k ohm resistor into the breadboard row containing the remaining leg of the LDR. Connect the other leg of the 10k ohm resistor to the negative ground rail.
+* **Step 4:** Insert a jumper wire into the exact row where the LDR leg and the 10k ohm resistor leg join together. Connect the other end of this wire to **Analog Pin A0** on the Arduino Uno.
+
+---
+
+### 3. Micro SD Card Module SPI Interface Setup
+
+The local data logging backup device communicates with the primary processor using the Serial Peripheral Interface protocol. This protocol dictates strict hardware pin mappings on the Arduino Uno board.
+
+* **VCC:** Connect to the 5V positive power rail.
+* **GND:** Connect to the negative ground rail.
+* **MISO (Master In Slave Out):** Connect to **Digital Pin 12** on the Arduino Uno.
+* **MOSI (Master Out Slave In):** Connect to **Digital Pin 11** on the Arduino Uno.
+* **SCK / CLK (Serial Clock):** Connect to **Digital Pin 13** on the Arduino Uno.
+* **CS / SS (Chip Select):** Connect to **Digital Pin 4** on the Arduino Uno.
+
+---
+
+### 4. Inter Board Serial Communication Interface
+
+To transmit parsed environmental metrics from the data collection subsystem to the web gateway, a physical serial pipeline must be routed between the two microcontrollers.
+
+* **Arduino Uno TX (Pin 1) to WeMos RX:** This line routes outbound data packets from the local sensor environment to the input buffer of the network gateway.
+* **Arduino Uno RX (Pin 0) to WeMos TX:** This line allows potential reverse command flow signals from the network client back to the primary controller.
+
+> [!CAUTION]
+> **Firmware Upload Disconnect Protocol:** The physical jumper wires connecting the TX and RX pins between the Arduino Uno and the WeMos module must be completely removed whenever uploading C++ sketches via the USB port. The USB programming interface shares the exact same hardware serial lines, and leaving the inter board wires connected during a flash sequence will cause protocol conflicts and prevent firmware deployment.
+
+---
+
+### Final Verification Checks
+
+1. Ensure no bare metal resistor legs are accidentally contacting adjacent rows on the breadboard, which would cause an electrical short circuit.
+2. Verify that all components share the exact same ground rail.
+3. Once the physical verification is complete, apply USB power to test the FreeRTOS scheduling tasks and verify that local logging file creation succeeds on the micro SD card.
